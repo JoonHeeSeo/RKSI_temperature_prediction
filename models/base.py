@@ -1,19 +1,10 @@
 import abc
-from torch import nn
+import torch.nn as nn
 
-class BaseModel(nn.Module, abc.ABC):
-    """모든 모델이 상속받는 추상 베이스 클래스"""
-    def __init__(self):
-        super().__init__()
+class BaseModel(nn.Module, metaclass=abc.ABCMeta):
+    """모든 모델의 공통 인터페이스."""
 
     @abc.abstractmethod
     def forward(self, x):
-        pass
-
-    @classmethod
-    def add_model_specific_args(cls, parser):
-        """
-        해당 모델에 필요한 argparse 인자를 추가.
-        예: hidden_size, num_layers 등
-        """
-        return parser
+        """순전파 로직."""
+        raise NotImplementedError
