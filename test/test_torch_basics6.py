@@ -1,4 +1,3 @@
-# rksi_daily_lstm.py
 import os, random, json, datetime as dt
 import numpy as np
 import pandas as pd
