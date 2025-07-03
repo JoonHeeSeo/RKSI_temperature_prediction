@@ -76,7 +76,7 @@ BATCH      = 32
 VAL_RATIO  = 0.1
 EPOCHS     = 50
 LR         = 1e-3
-CHECKPOINT = "best_lstm.pth"
+CHECKPOINT = "checkpoints/best_lstm.pth"
 
 dataset = TensorDataset(X_train_t, y_train_t)
 val_size   = int(len(dataset) * VAL_RATIO)

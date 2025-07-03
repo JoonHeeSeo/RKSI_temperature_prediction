@@ -118,14 +118,14 @@ for ep in range(1, EPOCHS+1):
 
     if val_loss < best_val:
         best_val = val_loss
-        torch.save(model.state_dict(), "best_linear.pth")
+        torch.save(model.state_dict(), "checkpoints/best_linear.pth")
     if ep % 20 == 0 or ep == 1:
         print(f"[{ep}/{EPOCHS}] train={train_loss:.4f}, val={val_loss:.4f}")
 
 # -----------------------------
 # 7. 추론 및 평가
 # -----------------------------
-model.load_state_dict(torch.load("best_linear.pth"))
+model.load_state_dict(torch.load("checkpoints/best_linear.pth"))
 model.eval()
 with torch.no_grad():
     preds_scaled = model(
