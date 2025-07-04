@@ -124,3 +124,9 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 mae  = mean_absolute_error(true, preds)
 rmse = np.sqrt(mean_squared_error(true, preds))
 print(f"▶ Test MAE: {mae:.2f}, RMSE: {rmse:.2f}")
+
+# -----------------------------
+# 9. 결과 저장
+# -----------------------------
+from utils.metrics_utils import write_metrics
+write_metrics(model_name='tcn', mae=mae, rmse=rmse)

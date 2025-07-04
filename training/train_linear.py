@@ -1,5 +1,4 @@
-import os
-import random
+import os, random
 import numpy as np
 import pandas as pd
 import torch
@@ -149,3 +148,9 @@ comp = pd.DataFrame({
 comp["abs_err"] = (comp.true - comp.pred).abs()
 comp["pct_err"] = comp.abs_err / comp.true.abs() * 100
 print(comp.head())
+
+# -----------------------------
+# 9. 결과 저장
+# -----------------------------
+from utils.metrics_utils import write_metrics
+write_metrics(model_name='linear', mae=mae, rmse=rmse)

@@ -160,4 +160,8 @@ comp["pct_err"] = comp.abs_err / comp.tavg_true.abs() * 100
 print("\n〈상위 5개 샘플〉")
 print(comp.head())
 
-# comp.to_csv("rksi_2024_pred_vs_true.csv", index=False)
+# -----------------------------
+# 9. 결과 저장
+# -----------------------------
+from utils.metrics_utils import write_metrics
+write_metrics(model_name='lstm', mae=mae, rmse=rmse)

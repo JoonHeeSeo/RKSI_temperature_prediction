@@ -156,3 +156,9 @@ comp = pd.DataFrame({'true': true.flatten(), 'pred': preds.flatten()})
 comp['abs_err'] = (comp.true - comp.pred).abs()
 comp['pct_err'] = comp.abs_err / comp.true.abs() * 100
 print(comp.head())
+
+# -----------------------------
+# 9. 결과 저장
+# -----------------------------
+from utils.metrics_utils import write_metrics
+write_metrics(model_name='gru', mae=mae, rmse=rmse)
