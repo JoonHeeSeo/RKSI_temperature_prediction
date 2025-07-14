@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 st.set_page_config(page_title="Model Metrics Comparison", layout="wide")
 st.title("Model Performance Comparison")
 
-METRICS_PATH = "results/metrics.csv"
+METRICS_PATH = "service/results.csv"
 
 # 1. Load metrics
 if not os.path.exists(METRICS_PATH):

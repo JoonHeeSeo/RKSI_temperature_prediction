@@ -5,7 +5,7 @@ def write_metrics(
     model_name: str,
     mae: float,
     rmse: float,
-    metrics_file: str = 'results/metrics.csv'
+    metrics_file: str = 'service/results.csv'
 ) -> None:
     """
     Add or update model performance metrics in a CSV file.
