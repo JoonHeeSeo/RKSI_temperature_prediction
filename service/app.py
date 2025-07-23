@@ -1,27 +1,26 @@
+from __future__ import annotations
 from pathlib import Path
-import streamlit as st
-import pandas as pd
-import matplotlib.pyplot as plt
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-# ──────────────────────────── Page & Header ─────────────────────────────
+import pandas as pd
+import plotly.express as px
+import streamlit as st
 
-st.set_page_config(page_title="RKSI Temperature Prediction", page_icon="🌡️", layout="wide")
+# ───────────────────────────── Page Config ──────────────────────────────
+st.set_page_config(
+    page_title="RKSI Temp Model Dashboard",
+    page_icon="🌡️",
+    layout="wide",
+)
 
-st.title("Model Performance Comparison")
-
-today = datetime.now(ZoneInfo("Asia/Seoul")).strftime("%B %d, %Y")
-st.caption(f"Data as of: {today}")
-
-# ──────────────────────────── Data Loading ──────────────────────────────
-
+# ─────────────────────────────── Data IO ───────────────────────────────
 BASE_DIR = Path(__file__).resolve().parent
-METRICS_PATH = BASE_DIR / "results.csv"
+METRICS_PATH = BASE_DIR / "results.csv"  # required
 
 @st.cache_data
 def load_metrics(path: Path) -> pd.DataFrame:
-    """Load CSV with utf-8 / cp949 fallback & cache it."""
+    """Read CSV with utf‑8 / cp949 fallback & cache the result."""
     for enc in ("utf-8", "cp949"):
         try:
             return pd.read_csv(path, encoding=enc)
@@ -36,78 +35,91 @@ if not METRICS_PATH.exists():
 
 df = load_metrics(METRICS_PATH)
 
-# ──────────────────────────── Highlight Cards ───────────────────────────
+# ────────────────────────── Derived Statistics ─────────────────────────
+baseline_row = df.loc[df["model"].str.lower() == "linear"].squeeze()  # baseline for Δ
+best_mae_idx = df["MAE(℃)"].idxmin()
+best_rmse_idx = df["RMSE(℃)"].idxmin()
 
-best_mae  = df["MAE(℃)"].min()
-best_rmse = df["RMSE(℃)"].min()
+# ─────────────────────────────── Header ────────────────────────────────
+now_kst = datetime.now(ZoneInfo("Asia/Seoul")).strftime("%B %d, %Y")
+st.title("📊 Temperature Prediction Model Comparison")
+st.caption(f"Data as of {now_kst}")
 
-c1, c2 = st.columns(2)
-c1.metric("🔹 Best MAE",  f"{best_mae:.3f} ℃")
-c2.metric("🔸 Best RMSE", f"{best_rmse:.3f} ℃")
+# ─────────────────────────────── Layout ────────────────────────────────
+OVERVIEW_TAB, DETAILS_TAB = st.tabs(["🔍 Overview", "📑 Details"])
 
-# ──────────────────────────── Raw Table ─────────────────────────────────
+# ───────────────────────────── Overview Tab ────────────────────────────
+with OVERVIEW_TAB:
+    # ---- Metric cards --------------------------------------------------
+    cols = st.columns(len(df))
+    for col, (_, row) in zip(cols, df.iterrows()):
+        delta_val = row["MAE(℃)"] - baseline_row["MAE(℃)"]
+        delta_str = f"{delta_val:+.3f} ℃" if not pd.isna(delta_val) else "‑"
+        with col:
+            st.metric(
+                label=row["model"].upper(),
+                value=f"{row['MAE(℃)']:.3f} ℃",
+                delta=delta_str,
+                help=f"RMSE: {row['RMSE(℃)']:.3f} ℃",
+            )
+            st.markdown("---")
 
-st.subheader("Raw Metrics")
-st.dataframe(df.set_index("model"))
+    # ---- Interactive scatter ------------------------------------------
+    scatter_fig = px.scatter(
+        df,
+        x="MAE(℃)",
+        y="RMSE(℃)",
+        text="model",
+        size_max=16,
+        hover_data={"MAE(℃)":":.3f", "RMSE(℃)":":.3f"},
+    )
+    scatter_fig.update_traces(textposition="top center")
+    scatter_fig.update_layout(height=450, dragmode="pan")
+    st.subheader("MAE vs. RMSE (lower‑left is better)")
+    st.plotly_chart(scatter_fig, use_container_width=True)
 
-# ──────────────────────────── Scatter Plot ──────────────────────────────
+# ───────────────────────────── Details Tab ─────────────────────────────
+with DETAILS_TAB:
+    metric_choice = st.radio("Sort by:", ("MAE", "RMSE"), horizontal=True)
+    sort_key = "MAE(℃)" if metric_choice == "MAE" else "RMSE(℃)"
+    df_sorted = df.sort_values(sort_key, kind="mergesort")  # stable sort for predictability
 
-st.subheader("MAE vs. RMSE (lower-left is better)")
+    # ---- Styled table --------------------------------------------------
+    st.dataframe(
+        df_sorted.style
+        .background_gradient(cmap="PuBu_r", subset=[sort_key])
+        .format({"MAE(℃)": "{:.3f}", "RMSE(℃)": "{:.3f}"}),
+        use_container_width=True,
+    )
 
-fig_s, ax_s = plt.subplots(figsize=(6, 6))
-ax_s.scatter(df["MAE(℃)"], df["RMSE(℃)"], s=120, alpha=0.8)
+    # ---- Horizontal bar chart -----------------------------------------
+    bar_fig = px.bar(
+        df_sorted,
+        x=sort_key,
+        y="model",
+        orientation="h",
+        text_auto=".3f",
+        height=350,
+        color="model",
+    )
+    bar_fig.update_layout(showlegend=False, yaxis=dict(categoryorder="total ascending"))
+    st.subheader(f"{metric_choice} by Model (sorted)")
+    st.plotly_chart(bar_fig, use_container_width=True)
 
-# Highlight best MAE point
-best_idx = df["MAE(℃)"].idxmin()
-ax_s.scatter(df.loc[best_idx, "MAE(℃)"],
-             df.loc[best_idx, "RMSE(℃)"],
-             s=240, color="crimson", edgecolor="black", zorder=5,
-             label="Best MAE")
-
-# Add labels with slight offset
-for _, row in df.iterrows():
-    ax_s.text(row["MAE(℃)"] + 0.005,
-              row["RMSE(℃)"] + 0.005,
-              row["model"],
-              fontsize=9)
-
-# Dynamic axis limits to reduce empty space
-min_val = min(df["MAE(℃)"].min(), df["RMSE(℃)"].min())
-max_val = max(df["MAE(℃)"].max(), df["RMSE(℃)"].max())
-padding = (max_val - min_val) * 0.15  # 15% padding around data
-
-ax_s.set_xlim(min_val - padding, max_val + padding)
-ax_s.set_ylim(min_val - padding, max_val + padding)
-
-# Reference diagonal
-ax_s.plot([min_val - padding, max_val + padding],
-          [min_val - padding, max_val + padding],
-          ls="--", color="grey", alpha=0.5)
-
-ax_s.set_xlabel("MAE (℃)")
-ax_s.set_ylabel("RMSE (℃)")
-ax_s.grid(True, ls="--", alpha=0.3)
-ax_s.legend()
-st.pyplot(fig_s)
-
-# ──────────────────────────── Horizontal Bars ───────────────────────────
-
-col1, col2 = st.columns(2)
-
-with col1:
-    st.subheader("MAE by Model (sorted)")
-    df_mae = df.sort_values("MAE(℃)")
-    fig_mae, ax_mae = plt.subplots(figsize=(6, 4))
-    ax_mae.barh(df_mae["model"], df_mae["MAE(℃)"], color="tab:blue")
-    ax_mae.set_xlabel("MAE (℃)")
-    ax_mae.invert_yaxis()
-    st.pyplot(fig_mae)
-
-with col2:
-    st.subheader("RMSE by Model (sorted)")
-    df_rmse = df.sort_values("RMSE(℃)")
-    fig_rmse, ax_rmse = plt.subplots(figsize=(6, 4))
-    ax_rmse.barh(df_rmse["model"], df_rmse["RMSE(℃)"], color="tab:orange")
-    ax_rmse.set_xlabel("RMSE (℃)")
-    ax_rmse.invert_yaxis()
-    st.pyplot(fig_rmse)
+    # ---- Optional: Prediction vs. Actual plot (if files exist) ---------
+    y_true_path = BASE_DIR / "y_true.csv"
+    if y_true_path.exists():
+        best_model_name = df.loc[best_mae_idx, "model"].lower()
+        y_pred_path = BASE_DIR / f"y_pred_{best_model_name}.csv"
+        if y_pred_path.exists():
+            y_true = pd.read_csv(y_true_path, parse_dates=["date"])
+            y_pred = pd.read_csv(y_pred_path, parse_dates=["date"])
+            tmp = y_true.merge(y_pred, on="date", suffixes=("_true", "_pred"))
+            line_fig = px.line(
+                tmp,
+                x="date",
+                y=[col for col in tmp.columns if col.startswith("temp_")],
+                labels={"value": "Temperature (℃)", "variable": ""},
+            )
+            st.subheader(f"📈 Best Model ({best_model_name}) – Actual vs Predicted")
+            st.plotly_chart(line_fig, use_container_width=True)
