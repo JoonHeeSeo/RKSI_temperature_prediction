@@ -6,6 +6,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset, random_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_absolute_error, mean_squared_error
+from utils.feature_utils import add_time_features, TIME_FEATURES
 
 # -----------------------------
 # 0. 공통 설정
@@ -31,11 +32,15 @@ TEST_CSV   = os.path.join(DATA_DIR, "rksi_weather_2024.csv")
 train_df = pd.read_csv(TRAIN_CSV, parse_dates=["time"])
 test_df  = pd.read_csv(TEST_CSV,  parse_dates=["time"])
 
-features = ["tmin", "tmax", "prcp", "wspd", "pres"]
+# Add time features
+train_df = add_time_features(train_df)
+test_df  = add_time_features(test_df)
+
+features = ["tmin", "tmax", "prcp", "wspd", "pres"] + TIME_FEATURES
 target   = "tavg"
 
 train_df = train_df[features + [target]].dropna()
-test_df  = test_df[features + [target]].dropna()
+test_df  = test_df[["time"] + features + [target]].dropna()
 
 # -----------------------------
 # 2. 정규화 (train 기준)
@@ -144,7 +149,7 @@ true  = y_test_seq  # (실측)
 # -----------------------------
 mae  = mean_absolute_error(true, preds)
 rmse = np.sqrt(mean_squared_error(true, preds))
-print("\n📊 2024년 평가")
+print("\n[2024 Evaluation]")
 print(f"MAE  = {mae:.2f} ℃")
 print(f"RMSE = {rmse:.2f} ℃")
 
@@ -163,5 +168,11 @@ print(comp.head())
 # -----------------------------
 # 9. 결과 저장
 # -----------------------------
-from utils.metrics_utils import write_metrics
+from utils.metrics_utils import write_metrics, write_predictions
 write_metrics(model_name='lstm', mae=mae, rmse=rmse)
+write_predictions(
+    model_name='lstm',
+    dates=test_df["time"].iloc[SEQ_LEN:].values,
+    y_true=true,
+    y_pred=preds
+)

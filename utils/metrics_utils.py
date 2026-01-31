@@ -1,5 +1,35 @@
 import os
 import csv
+import pandas as pd
+
+
+def write_predictions(
+    model_name: str,
+    dates,
+    y_true,
+    y_pred,
+    output_dir: str = 'service'
+) -> None:
+    """
+    Save prediction results for dashboard visualization.
+
+    Args:
+        model_name: Model identifier (e.g., 'lstm', 'tcn').
+        dates: Date values for each prediction.
+        y_true: Actual temperature values.
+        y_pred: Predicted temperature values.
+        output_dir: Directory to save CSV files.
+    """
+    os.makedirs(output_dir, exist_ok=True)
+
+    # y_true.csv (shared across models, overwritten each time)
+    true_df = pd.DataFrame({'date': dates, 'temp': y_true.flatten()})
+    true_df.to_csv(os.path.join(output_dir, 'y_true.csv'), index=False)
+
+    # y_pred_{model}.csv
+    pred_df = pd.DataFrame({'date': dates, 'temp': y_pred.flatten()})
+    pred_df.to_csv(os.path.join(output_dir, f'y_pred_{model_name}.csv'), index=False)
+
 
 def write_metrics(
     model_name: str,

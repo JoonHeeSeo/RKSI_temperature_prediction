@@ -9,6 +9,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_absolute_error, mean_squared_error
+from utils.feature_utils import add_time_features, TIME_FEATURES
 
 from models.tcn import TCNModel
 
@@ -27,11 +28,17 @@ DATA_DIR  = os.path.join(os.getcwd(), "data")
 TRAIN_CSV = os.path.join(DATA_DIR, "rksi_weather.csv")
 TEST_CSV  = os.path.join(DATA_DIR, "rksi_weather_2024.csv")
 
-features = ["tmin", "tmax", "prcp", "wspd", "pres"]
-target   = "tavg"
+base_features = ["tmin", "tmax", "prcp", "wspd", "pres"]
+target = "tavg"
 
-train_df = pd.read_csv(TRAIN_CSV, parse_dates=["time"]).dropna(subset=features+[target])
-test_df  = pd.read_csv(TEST_CSV,  parse_dates=["time"]).dropna(subset=features+[target])
+train_df = pd.read_csv(TRAIN_CSV, parse_dates=["time"]).dropna(subset=base_features + [target])
+test_df  = pd.read_csv(TEST_CSV,  parse_dates=["time"]).dropna(subset=base_features + [target])
+
+# Add time features
+train_df = add_time_features(train_df)
+test_df  = add_time_features(test_df)
+
+features = base_features + TIME_FEATURES
 
 # 2. 정규화
 os.makedirs("checkpoints", exist_ok=True)
@@ -128,5 +135,11 @@ print(f"▶ Test MAE: {mae:.2f}, RMSE: {rmse:.2f}")
 # -----------------------------
 # 9. 결과 저장
 # -----------------------------
-from utils.metrics_utils import write_metrics
+from utils.metrics_utils import write_metrics, write_predictions
 write_metrics(model_name='tcn', mae=mae, rmse=rmse)
+write_predictions(
+    model_name='tcn',
+    dates=test_df["time"].iloc[SEQ_LEN:].values,
+    y_true=true,
+    y_pred=preds
+)

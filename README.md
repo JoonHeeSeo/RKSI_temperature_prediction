@@ -1,82 +1,84 @@
-# 🛰️ Incheon Airport (RKSI) Daily Temperature Prediction
+# RKSI Temperature Prediction
 
-[![Streamlit Demo](https://img.shields.io/badge/Demo-Streamlit-blue)](https://rksi-temperature-prediction.streamlit.app/)
+Predict next-day mean temperature at Incheon International Airport (ICAO: RKSI) using historical weather data.
 
-https://rksi-temperature-prediction.streamlit.app/
+## Overview
 
-## 📖 Overview
+This project builds an end-to-end pipeline for temperature forecasting:
 
-Predict **next‑day mean temperature** at **Incheon International Airport** (ICAO: **RKSI**) from historical weather observations using a suite of deep‑learning and classical models.
+- Collect daily weather observations via Meteostat API
+- Generate time-based features (month, seasonal cycles)
+- Train and compare multiple time-series models
+- Visualize results through a Streamlit dashboard
 
-### Key Features
+### Models
 
-- **End‑to‑end pipeline**: data acquisition → preprocessing → model training → evaluation → interactive demo
-- Multiple architectures: **Linear, MLP, LSTM, GRU, TCN, Transformer**
-- Simple CLI interface for experimenting with individual or all models
-- **Streamlit dashboard** for live inference, visualisations, and comparison with climatology baseline
+- Linear Regression
+- MLP (Multi-Layer Perceptron)
+- LSTM
+- GRU
+- TCN (Temporal Convolutional Network)
+- Transformer
 
----
-
-## 🌐 Live Demo
-
-```text
-https://rksi-temperature-prediction.streamlit.app/
-```
-
-> or run locally with `streamlit run service/app.py` (see below).
-
----
-
-## 🛠️ Installation
+## Installation
 
 ```bash
-# Python 3.13+ is recommended
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r service/requirements.txt
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
 ```
 
----
+## Data
 
-## ⬇️ Data
-
-Weather observations are pulled on‑demand from **[Meteostat](https://dev.meteostat.net/)** and cached locally.
+Download weather data from Meteostat:
 
 ```bash
 python data/download_weather.py \
-  --start 2023-01-01 \
+  --start 2020-01-01 \
   --end   2023-12-31 \
-  --out   data/rksi_weather_2023.csv
+  --out   data/rksi_weather.csv
 ```
 
----
+## Training
 
-## 🚀 Training
+Train all models:
 
-| Command                                | Description                    |
-| -------------------------------------- | ------------------------------ |
-| `python -m training.train_all`         | Train every model sequentially |
-| `python -m training.train_linear`      | Linear Regression              |
-| `python -m training.train_lstm`        | Long Short‑Term Memory (LSTM)  |
-| `python -m training.train_mlp`         | Multi‑Layer Perceptron (MLP)   |
-| `python -m training.train_gru`         | Gated Recurrent Unit (GRU)     |
-| `python -m training.train_tcn`         | Temporal Convolutional Network |
-| `python -m training.train_transformer` | Transformer encoder‑decoder    |
+```bash
+python -m training.train_all
+```
 
----
+Or train individually:
 
-## 🖥️ Streamlit App
+```bash
+python -m training.train_linear
+python -m training.train_mlp
+python -m training.train_lstm
+python -m training.train_gru
+python -m training.train_tcn
+python -m training.train_transformer
+```
 
-The dashboard lets you
+Results are saved to `service/results.csv`.
 
-- Pick a date range and compare model forecasts with actual observations
-- Visualise uncertainty bands & residuals
-- Download predictions as CSV
+## Dashboard
 
-Run locally:
+Run the Streamlit app to compare model performance:
 
 ```bash
 streamlit run service/app.py
 ```
 
-Deploy effortlessly to **Streamlit Community Cloud** (or any Docker‑ready host).
+Features:
+- Model performance comparison (MAE, RMSE)
+- Predicted vs actual temperature plot
+
+## Project Structure
+
+```
+├── data/                 # Data collection scripts
+├── models/               # Model definitions
+├── training/             # Training scripts
+├── service/              # Streamlit app and results
+├── utils/                # Feature engineering, metrics
+└── checkpoints/          # Saved model weights
+```
