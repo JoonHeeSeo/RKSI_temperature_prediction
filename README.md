@@ -1,8 +1,12 @@
 # RKSI Temperature Prediction
 
+[![Streamlit Demo](https://img.shields.io/badge/Demo-Streamlit-blue)](https://rksi-temperature-prediction.streamlit.app/)
+
 Predict next-day mean temperature at Incheon International Airport (ICAO: RKSI) using historical weather data.
 
-## Overview
+**Live demo:** https://rksi-temperature-prediction.streamlit.app/
+
+## Features
 
 This project builds an end-to-end pipeline for temperature forecasting:
 
@@ -11,7 +15,7 @@ This project builds an end-to-end pipeline for temperature forecasting:
 - Train and compare multiple time-series models
 - Visualize results through a Streamlit dashboard
 
-### Models
+## Models
 
 - Linear Regression
 - MLP (Multi-Layer Perceptron)
