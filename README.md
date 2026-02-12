@@ -27,9 +27,7 @@ This project builds an end-to-end pipeline for temperature forecasting:
 ## Installation
 
 ```bash
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
+uv sync
 ```
 
 ## Data
@@ -37,7 +35,7 @@ pip install -r requirements.txt
 Download weather data from Meteostat:
 
 ```bash
-python data/download_weather.py \
+uv run python data/download_weather.py \
   --start 2020-01-01 \
   --end   2023-12-31 \
   --out   data/rksi_weather.csv
@@ -48,18 +46,18 @@ python data/download_weather.py \
 Train all models:
 
 ```bash
-python -m training.train_all
+uv run python -m training.train_all
 ```
 
 Or train individually:
 
 ```bash
-python -m training.train_linear
-python -m training.train_mlp
-python -m training.train_lstm
-python -m training.train_gru
-python -m training.train_tcn
-python -m training.train_transformer
+uv run python -m training.train_linear
+uv run python -m training.train_mlp
+uv run python -m training.train_lstm
+uv run python -m training.train_gru
+uv run python -m training.train_tcn
+uv run python -m training.train_transformer
 ```
 
 Results are saved to `service/results.csv`.
@@ -69,7 +67,7 @@ Results are saved to `service/results.csv`.
 Run the Streamlit app to compare model performance:
 
 ```bash
-streamlit run service/app.py
+uv run streamlit run service/app.py
 ```
 
 Features:

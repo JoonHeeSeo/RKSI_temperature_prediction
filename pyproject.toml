@@ -1,0 +1,19 @@
+[project]
+name = "rksi-temperature-prediction"
+version = "0.1.0"
+description = "Predict next-day mean temperature at Incheon International Airport (ICAO: RKSI) using historical weather data"
+requires-python = ">=3.12"
+dependencies = [
+    "matplotlib>=3.10.3",
+    "meteostat>=1.7.1",
+    "numpy>=2.3.0",
+    "pandas>=2.3.1",
+    "plotly>=6.2.0",
+    "pyarrow>=20.0.0",
+    "scikit-learn>=1.7.0",
+    "scipy>=1.15.3",
+    "streamlit>=1.46.1",
+    "torch>=2.7.1",
+    "torchaudio>=2.7.1",
+    "torchvision>=0.22.1",
+]
